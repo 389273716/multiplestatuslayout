@@ -12,7 +12,7 @@ import com.tc.mutilstatuslayoutlib.layout.IBaseLayout;
  * description 内容布局
  * modify by
  */
-public class ContentLayout implements IBaseLayout {
+public class FailureLayout implements IBaseLayout {
 
 
 

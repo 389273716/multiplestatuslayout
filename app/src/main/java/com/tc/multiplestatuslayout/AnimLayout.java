@@ -9,10 +9,10 @@ import com.tc.mutilstatuslayoutlib.layout.IBaseLayout;
  * author：   tc
  * date：     2017/3/16 & 下午3:36
  * version    1.0
- * description 内容布局
+ * description 加载时的动画布局
  * modify by
  */
-public class ContentLayout implements IBaseLayout {
+public class AnimLayout implements IBaseLayout {
 
 
 

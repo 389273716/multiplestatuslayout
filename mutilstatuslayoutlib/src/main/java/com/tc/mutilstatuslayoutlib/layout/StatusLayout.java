@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
 
@@ -20,24 +21,35 @@ import static android.content.ContentValues.TAG;
  * description 不同状态布局的控制器，
  * modify by
  */
-public class StatusLayoutController extends FrameLayout implements IControl {
+public class StatusLayout extends FrameLayout implements IControl {
 
-
+    /**
+     * 是否已经加载过，主要用来判断viewstub是否初始化了
+     */
+    private HashMap<Integer, Boolean> mLayoutInitType = new HashMap<>();
+    /**
+     * 用来存放viewstub对象。
+     */
+    private HashMap<Integer, ViewStub> mViewStubs = new HashMap<>();
+    /**
+     * 用来存放每个viewstub inflate后的view对象。
+     */
+    private HashMap<Integer, ViewStub> mRootViews = new HashMap<>();
     /**
      * 状态布局初始化后的view集合，key是布局type，value为布局初始化后的view
      */
     private HashMap<Integer, IBaseLayout> mStatusLayoutViews = new HashMap<>();
 
-    public StatusLayoutController(@NonNull Context context) {
+    public StatusLayout(@NonNull Context context) {
         super(context);
     }
 
-    public StatusLayoutController(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public StatusLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public StatusLayoutController(@NonNull Context context, @Nullable AttributeSet attrs,
-                                  @AttrRes int defStyleAttr) {
+    public StatusLayout(@NonNull Context context, @Nullable AttributeSet attrs,
+                        @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
@@ -47,28 +59,41 @@ public class StatusLayoutController extends FrameLayout implements IControl {
         if (baseLayout == null) {
             throw new NullPointerException("layout is null! ");
         }
-        if (mStatusLayoutViews.get(baseLayout.getLayoutStatus()) == null) {
-            mStatusLayoutViews.put(baseLayout.getLayoutStatus(), baseLayout);
-            this.addView(new ViewStub(getContext(), baseLayout.getStatusViewId()));
+        int layoutStatus = baseLayout.getLayoutStatus();
+        if (mStatusLayoutViews.get(layoutStatus) == null) {
+            mLayoutInitType.put(layoutStatus, false);
+            mStatusLayoutViews.put(layoutStatus, baseLayout);
+            ViewStub viewStub = new ViewStub(getContext(), baseLayout.getStatusViewId());
+            mViewStubs.put(layoutStatus, viewStub);
+            this.addView(viewStub);
         } else {
             Log.i(TAG, "addStatusView:this status layout had add!");
         }
     }
 
     @Override
-    public void setStatusLayout(int status) {
+    public void setCurrentStatusLayout(int status) {
         for (Integer layoutStatus : mStatusLayoutViews.keySet()) {
             IBaseLayout iBaseLayout = mStatusLayoutViews.get(layoutStatus);
             if (iBaseLayout != null) {
+                if (!mLayoutInitType.get(status)) {
+                    View inflate = mViewStubs.get(layoutStatus).inflate();
+                    iBaseLayout.onCreateView(inflate);
+                    mLayoutInitType.put(status, true);
+                }
+                if (status != layoutStatus) {
+                    mRootViews.get(layoutStatus).setVisibility(GONE);
+                    iBaseLayout.onHide();
+                    continue;
+                }
+                mRootViews.get(layoutStatus).setVisibility(VISIBLE);
                 iBaseLayout.onShow();
+
             }
+
         }
     }
 
-    @Override
-    public void removeStatusLayout(int status) {
-
-    }
 
 
 }
